@@ -1,0 +1,15 @@
+torch
+torchvision
+timm
+numpy
+pandas
+opencv-python
+imageio
+mediapipe
+Pillow
+lmdb
+pykinect-azure
+scikit-learn
+matplotlib
+seaborn
+tqdm
