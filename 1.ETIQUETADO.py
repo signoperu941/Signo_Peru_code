@@ -12,7 +12,7 @@ class LabelingApp:
         self.root.title("Programa de Etiquetado")
         
         # Ruta principal de los datos
-        self.data_path = r"D:\SUJETO 8"
+        self.data_path = r"C:\Users\20214\Documents\prueba"
         
         # Variables de selección
         self.subject_folders = []
@@ -34,8 +34,22 @@ class LabelingApp:
         
         # Lista de clases (para expresiones faciales)
         self.facial_classes = [
-"Difícil (de decir o hacer algo)"
-]
+            "lets see",
+            "bored",
+            "tired",
+            "disgust",
+            "happy",
+            "smells bad",
+            "thief",
+            "cry",
+            "annoyed",
+            "no",
+            "i dont know",
+            "yes",
+            "surprise",
+            "sad"
+            ]
+
 
 
 

@@ -140,11 +140,6 @@ The dataset consists of **14 Peruvian Sign Language expression categories** with
 
 This project is part of academic research on Peruvian Sign Language recognition. The complete methodology and experimental results will be available in an upcoming publication.
 
-### Citation
-```
-[Paper citation will be added upon publication]
-```
-
 ## 📦 Requirements
 
 See `requirements.txt` for full dependencies. Main requirements:
@@ -154,15 +149,12 @@ See `requirements.txt` for full dependencies. Main requirements:
 - MediaPipe
 - Kinect Azure SDK (for data collection only)
 
-## 📝 License
-
-[Specify your license]
 
 ## ✉️ Contact
 
 For questions or collaboration inquiries, please contact:
-[Your contact information]
+eescobed@ulima.edu.pe
 
 ## 🙏 Acknowledgments
 
-This research was conducted as part of [Institution/Project name].
+We thank the native LSP signers who volunteered their time to record the dataset and the assistants who supported the data collection sessions, and we also acknowledge the Artificial Intelligence Laboratory (IALAB) for providing its facilities for the recording sessions.

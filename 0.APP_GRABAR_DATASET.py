@@ -6,7 +6,6 @@ from PIL import Image, ImageTk
 import threading
 import numpy as np
 import os
-import xml.etree.ElementTree as ET
 
 class KinectApp:
     def __init__(self, root):
@@ -29,9 +28,7 @@ class KinectApp:
         self.recording = False
         self.rgb_frames = []
         self.depth_frames = []
-        self.skeleton_data_pixel = []  # Inicializa la lista para coordenadas en píxeles
-        self.skeleton_data_real = []   # Inicializa la lista para coordenadas en el mundo real
-        self.original_rgb_frames = []  # Almacenar los frames RGB originales
+        self.original_rgb_frames = []
         self.record_thread = None
         
         # Inicializa Kinect
@@ -91,24 +88,19 @@ class KinectApp:
         window.geometry(f'{width}x{height}+{x}+{y}')
 
     def on_resize(self, event):
-        # Redraw the frames on resize to maintain proportionality
         self.redraw_frames()
 
     def redraw_frames(self):
         if hasattr(self, 'rgb_frame') and hasattr(self, 'depth_frame'):
-            # Get current window size
             window_width = self.root.winfo_width()
             window_height = self.root.winfo_height()
 
-            # Calculate new sizes for the images
             new_width = int(window_width * 0.45)
             new_height = int(window_height * 0.45)
 
-            # Resize images for display
             rgb_display = cv2.resize(self.rgb_frame, (new_width, new_height))
             depth_display = cv2.resize(self.depth_frame, (new_width, new_height))
 
-            # Convert images to display
             rgb_img = ImageTk.PhotoImage(image=Image.fromarray(cv2.cvtColor(rgb_display, cv2.COLOR_BGRA2RGB)))
             self.rgb_label.config(image=rgb_img)
             self.rgb_label.image = rgb_img
@@ -138,7 +130,6 @@ class KinectApp:
         self.rgb_frames = []
         self.depth_frames = []
         self.original_rgb_frames = []
-        self.skeleton_data = []
 
     def stop_recording(self):
         self.recording = False
@@ -149,17 +140,14 @@ class KinectApp:
 
     def save_data(self):
         if self.save_dir:
-            # Crear una carpeta única para guardar los datos
             save_folder = self.get_next_folder_name()
             os.makedirs(save_folder, exist_ok=True)
 
-            # Crear directorios para RGB y Depth dentro de la carpeta única
             rgb_dir = os.path.join(save_folder, "rgb")
             depth_dir = os.path.join(save_folder, "depth")
             os.makedirs(rgb_dir, exist_ok=True)
             os.makedirs(depth_dir, exist_ok=True)
 
-            # Crear y mostrar la ventana "saving data"
             saving_window = Toplevel(self.root)
             saving_window.title("Saving Data")
 
@@ -174,70 +162,26 @@ class KinectApp:
                     rgb_image_path = os.path.join(rgb_dir, f"rgb_frame_{i}.png")
                     cv2.imwrite(rgb_image_path, cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR))
 
-                # Guardar frames Depth como archivos XML
+                # Guardar frames Depth como PNG de 16 bits
                 for i, frame in enumerate(self.depth_frames):
-                    depth_image_path = os.path.join(depth_dir, f"depth_frame_{i}.xml")
-                    self.save_depth_to_xml(depth_image_path, frame, i)
+                    depth_image_path = os.path.join(depth_dir, f"depth_frame_{i}.png")
+                    # frame ya es uint16 directamente desde el Kinect
+                    cv2.imwrite(depth_image_path, frame.astype(np.uint16))
 
-                # Save skeleton data (2D and 3D coordinates)
-                skeleton_pixel_path = os.path.join(save_folder, "skeleton_data_pixel.txt")
-                skeleton_real_path = os.path.join(save_folder, "skeleton_data_real.txt")
-
-                # Save pixel coordinates (2D)
-                with open(skeleton_pixel_path, "w") as f:
-                    for frame_data in self.skeleton_data_pixel:
-                        f.write(f"{frame_data}\n")
-
-                # Save real-world coordinates (3D)
-                with open(skeleton_real_path, "w") as f:
-                    for frame_data in self.skeleton_data_real:
-                        f.write(f"{frame_data}\n")
-
-                # Actualizar la etiqueta y cerrar la ventana después de un retraso
                 saving_label.config(text="Datos guardados")
-                self.root.after(2000, saving_window.destroy)  # Cerrar después de 2 segundos
+                self.root.after(2000, saving_window.destroy)
 
             threading.Thread(target=perform_save).start()
             self.save_button.config(state=tk.DISABLED)
 
-    def save_depth_to_xml(self, file_path, depth_frame, frame_index):
-        # Crear la estructura XML
-        root = ET.Element("lsp_storage")
-        depth_img_tag = ET.SubElement(root, f"depthImg{frame_index}")
-
-        width = ET.SubElement(depth_img_tag, "width")
-        width.text = str(depth_frame.shape[1])
-
-        height = ET.SubElement(depth_img_tag, "height")
-        height.text = str(depth_frame.shape[0])
-
-        origin = ET.SubElement(depth_img_tag, "origin")
-        origin.text = "top-left"
-
-        layout = ET.SubElement(depth_img_tag, "layout")
-        layout.text = "interleaved"
-
-        dt = ET.SubElement(depth_img_tag, "dt")
-        dt.text = "w"
-
-        data = ET.SubElement(depth_img_tag, "data")
-        # Convertir la matriz de profundidad en una cadena separada por espacios
-        depth_data_str = ' '.join(map(str, depth_frame.flatten()))
-        data.text = depth_data_str
-
-        # Guardar el XML en el archivo
-        tree = ET.ElementTree(root)
-        tree.write(file_path, encoding='utf-8', xml_declaration=True)
-
     def close_app(self):
         self.running = False
         if self.display_thread is not None:
-            self.display_thread.join()  # Asegurar que el hilo termine antes de continuar
+            self.display_thread.join()
         self.release_resources()
         self.root.destroy()
 
     def release_resources(self):
-        # Asegurarse de liberar los recursos de Kinect
         if self.device:
             self.device.stop_cameras()
             self.device.close()
@@ -248,7 +192,7 @@ class KinectApp:
     def display(self):
         while self.running:
             capture = self.device.update()
-            body_frame = self.bodyTracker.update()
+            self.bodyTracker.update()  # Mantiene el tracker activo sin usar el resultado
 
             ret_color, color_image = capture.get_color_image()
             ret_depth, depth_image = capture.get_depth_image()
@@ -258,23 +202,13 @@ class KinectApp:
 
             # Almacenar frames si se está grabando
             if self.recording:
-                self.original_rgb_frames.append(color_image.copy())  # Guardar la imagen RGB original
-                self.rgb_frames.append(color_image)  # Esta versión puede ser modificada para visualización
-                self.depth_frames.append(depth_image)
+                self.original_rgb_frames.append(color_image.copy())
+                self.rgb_frames.append(color_image)
+                self.depth_frames.append(depth_image.copy())  # uint16 sin modificar
 
-                skeleton_data_pixel_frame = []
-                skeleton_data_real_frame = []
-                for body_id in range(body_frame.get_num_bodies()):
-                    skeleton_2d = body_frame.get_body2d(body_id, pykinect.K4A_CALIBRATION_TYPE_COLOR).numpy()
-                    skeleton_data_pixel_frame.append(skeleton_2d.flatten())
-                    #print("Aqui:",skeleton_2d)
-                    skeleton_3d = body_frame.get_body(body_id).numpy()
-                    skeleton_data_real_frame.append(skeleton_3d.flatten())
-
-                self.skeleton_data_pixel.append(" ".join(map(str, np.concatenate(skeleton_data_pixel_frame))))
-                self.skeleton_data_real.append(" ".join(map(str, np.concatenate(skeleton_data_real_frame))))
-            # Dibujar esqueleto en la imagen RGB para visualización
-            self.rgb_frame = body_frame.draw_bodies(color_image, pykinect.K4A_CALIBRATION_TYPE_COLOR)
+            # Mostrar imagen RGB limpia, sin landmarks superpuestos
+            self.rgb_frame = color_image
+            # Normalizar solo para visualización (no afecta lo guardado)
             self.depth_frame = cv2.normalize(depth_image, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
 
             self.redraw_frames()
@@ -283,4 +217,3 @@ class KinectApp:
 root = tk.Tk()
 app = KinectApp(root)
 root.mainloop()
-
