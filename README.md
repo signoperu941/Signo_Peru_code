@@ -54,13 +54,12 @@ python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA av
 ## 📁 Project Structure
 ```
 SIGNO_PERU/
-├── 0.APP_GRABAR_DATASET_KINECT_AZURE_(1)_V2.py  # Kinect data capture
+├── 0.APP_GRABAR_DATASET.py                       # Kinect data capture
 ├── 1.ETIQUETADO.py                               # Manual labeling tool
-├── 2.RECORTE.ipynb                               # Face detection & cropping
-├── 3.AUMENTACION_DE_DATOS.ipynb                  # Data augmentation
-├── 4.AUMENTACION.ipynb                           # Additional augmentation
-├── 5.CONVERSION_LMDB.ipynb                       # LMDB serialization
-├── 6.LANDMARKS.ipynb                             # Facial landmark extraction
+├── 2.RECORTE.py                                  # Face detection & cropping
+├── 3.LANDMARKS.PY                                # Facial landmark extraction
+├── 4.AUMENTACION_DE_DATOS.py                     # Data augmentation
+├── 5.CONVERSION_LMDB.py                          # LMDB serialization
 ├── ARQUITECTURAS/                                # Model training implementations
 │   ├── 2+1D.ipynb                                # R(2+1)D model training
 │   ├── 2+1D TwoStream.ipynb                      # R(2+1)D Two-Stream model
@@ -83,17 +82,13 @@ python 1.ETIQUETADO.py
 ```
 
 ### Step 3-6: Preprocessing Pipeline
-Run the Jupyter notebooks in sequential order:
+Run the scripts in sequential order:
 ```bash
-jupyter notebook
-# Execute in order:
-# 1. 2.RECORTE.ipynb
-# 2. 3.AUMENTACION_DE_DATOS.ipynb
-# 3. 4.AUMENTACION.ipynb
-# 4. 5.CONVERSION_LMDB.ipynb
-# 5. 6.LANDMARKS.ipynb
+python 2.RECORTE.py
+python 3.LANDMARKS.PY
+python 4.AUMENTACION_DE_DATOS.py
+python 5.CONVERSION_LMDB.py
 ```
-
 ### Step 7: Model Training
 Navigate to the `ARQUITECTURAS/` folder and select the desired architecture:
 
