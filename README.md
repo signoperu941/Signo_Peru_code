@@ -74,21 +74,36 @@ SIGNO_PERU/
 ```bash
 python "0.APP_GRABAR_DATASET_KINECT_AZURE_(1)_V2.py"
 ```
-**Note:** Microsoft Kinect Azure sensor is required for this step.
+**Description:** A GUI tool built with Tkinter to record synchronized RGB and Depth video sequences frame-by-frame using the Azure Kinect sensor.
 
 ### Step 2: Data Labeling
 ```bash
 python 1.ETIQUETADO.py
 ```
+**Description:** A GUI application to manually segment and label the recorded signs. Users mark the start and end frames of a sign, and the script automatically extracts and saves the corresponding RGB and Depth frames into structured señas_procesadas folders. Progress is saved via a JSON file to allow pausing/resuming.
 
 ### Step 3-6: Preprocessing Pipeline
 Run the scripts in sequential order:
 ```bash
 python 2.RECORTE.py
+```
+**Description:** Automates facial detection and cropping to remove background noise. It uses a temporal tracker to ensure smooth bounding boxes, expands the area by 40% to capture head/neck movements, and resizes frames uniformly to 640x640 pixels.
+
+```bash
 python 3.LANDMARKS.PY
+```
+**Description:** Extracts 468 facial landmarks from the cropped frames using MediaPipe Face Mesh. It handles failed detections with zero-padding to maintain temporal consistency and exports the sequences as 2D pixel (skeleton_data_pixel.txt) and 3D normalized (skeleton_data_real.txt) coordinates.
+
+```bash
 python 4.AUMENTACION_DE_DATOS.py
+```
+**Description:** Performs on-disk data augmentation (Flip, Rotation, Grayscale, Stretch) to prevent overfitting. Transformation parameters are fixed per video sequence to preserve natural movement dynamics.
+
+```bash
 python 5.CONVERSION_LMDB.py
 ```
+**Description:** (Optional) Converts the processed .png frames into LMDB databases (Train, Val, Test). This maps data directly into memory, eliminating disk I/O bottlenecks and drastically speeding up the model's training time.
+
 ### Step 7: Model Training
 Navigate to the `ARQUITECTURAS/` folder and select the desired architecture:
 
@@ -100,6 +115,7 @@ Navigate to the `ARQUITECTURAS/` folder and select the desired architecture:
 jupyter notebook ARQUITECTURAS/
 # Open and run the desired architecture notebook
 ```
+**Important Note on Custom Landmarks:** If you plan to conduct experiments that modify the extracted facial landmarks (e.g., isolating specific points like eyebrows or changing the total number of tracked coordinates in `3.LANDMARKS.PY`), you will need to adapt the training notebooks accordingly. Specifically, the data loading sections and the input layers of the landmark branches (such as in the Spatial-Temporal GCN Two-Stream architecture) must be updated to match the new topological dimensions of your custom data.
 
 ## 🏗️ Model Architectures
 
